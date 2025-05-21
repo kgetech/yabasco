@@ -137,7 +137,7 @@ class SmithChartCanvas(FigureCanvas):
                              f"{lam:.3f}λ, {phi_deg:.1f}°",
                              color=self.r1_color, ha='center', va='center', fontsize=8)
                 self.ax.text(p.real * (2.5 + off), p.imag * (2.5 + off),
-                             f"{p.real:.2f}+j{phi_deg:.2f}",
+                             f"{p.real:.2f}+j{p.imag:.2f}",
                              color=self.r1_color, ha='center', va='center', fontsize=8)
         # Load phase line endpoints
         if mag_L > 0:
