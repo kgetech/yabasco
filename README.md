@@ -21,9 +21,11 @@ GitHub: <https://github.com/kgetech/>
 
 *Made for people who had weird labs and simple needs.* 
 
-For Powershell:
+For Powershell (if you can't execute the .ps1 script):
 
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+For BASH/\*nix: Coming soon.  
 
 Release Info:
 2025 05 21 03:23PM TODO: 
