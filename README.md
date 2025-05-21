@@ -29,7 +29,7 @@ For BASH/\*nix: Coming soon.
 
 Release Info:
 2025 05 21 03:23PM TODO: 
-- Fix the labels on the chart curves
+- ~~Fix the labels on the chart curves~~
 - Add more labels
 - Make points draggable
 - Allow multiple impedance entries
