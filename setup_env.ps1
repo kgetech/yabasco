@@ -27,4 +27,4 @@ python -m venv venv
 pip install scikit-rf pyqt5 matplotlib numpy
 
 # Start The Program
-python PySmiCha.py
+python yabasco.py
