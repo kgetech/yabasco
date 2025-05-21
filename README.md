@@ -24,3 +24,13 @@ GitHub: <https://github.com/kgetech/>
 For Powershell:
 
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+Release Info:
+2025 05 21 03:23PM TODO: 
+- Fix the labels on the chart curves
+- Add more labels
+- Make points draggable
+- Allow multiple impedance entries
+- Report the cursor position below the cursor
+- More Testing
+- Other Features? 
