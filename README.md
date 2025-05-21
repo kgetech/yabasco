@@ -1,8 +1,3 @@
-yabasco: Yet Another BAsic Smith Chart gizmO
-Copyright (C) 2025  Kyle Thomas Goodman
-email: kylegoodman@kgindustrial.com
-GitHub: https://github.com/kgetech/
-
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -18,7 +13,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # <sup>yabasco:</sup> <sub>Yet Another BAsic Smith Chart gizmO</sub>
 
+Copyright (C) 2025  Kyle Thomas Goodman
+
+email: <mailto:kylegoodman@kgindustrial.com>
+
+GitHub: <https://github.com/kgetech/>
+
 *Made for people who had weird labs and simple needs.* 
 
 For Powershell:
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
