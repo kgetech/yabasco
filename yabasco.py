@@ -100,7 +100,7 @@ class SmithChartCanvas(FigureCanvas):
             if i % self.label_resistance_every == 0:
                 idx = len(g) // 2
                 self.ax.text(g.real[idx], g.imag[idx], f"{r:.2f}", fontsize=6,
-                             color='black', rotation=90, rotation_mode='anchor')
+                             color='white', rotation=90, rotation_mode='anchor')
         # Reactance constant circles + labels
         x_vals = np.linspace(0.1, 10, self.num_x_lines)
         for j, x in enumerate(x_vals):
@@ -115,7 +115,7 @@ class SmithChartCanvas(FigureCanvas):
                     p1 = g[100]; p2 = g[102]
                     ang = angle_between((p1.real, p1.imag), (p2.real, p2.imag))
                     self.ax.text(gl.real, gl.imag, f"j{sign*x:.2f}", fontsize=6,
-                                 color='black', rotation=ang, rotation_mode='anchor')
+                                 color='white', rotation=ang, rotation_mode='anchor')
         # Reflection coefficients
         gL = gamma_from_z(ZL_n, 1)
         gIn = gamma_from_z(Zin_n, 1)
