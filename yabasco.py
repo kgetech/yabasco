@@ -71,102 +71,107 @@ class SmithChartCanvas(FigureCanvas):
         self.animation_timer.timeout.connect(self.animate_path)
 
     def plot_chart(self, Z0, ZL, Zin):
-        # Update values
+        # Update and normalize
         self.Z0, self.ZL, self.Zin = Z0, ZL, Zin
-        # Normalize
         ZL_n = ZL / Z0
         Zin_n = Zin / Z0
-        # Clear
         self.ax.clear()
+        # Hide Cartesian frame
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
+        for spine in self.ax.spines.values():
+            spine.set_visible(False)
         # Unit circle
         self.ax.add_patch(plt.Circle((0, 0), 1, fill=False, color=self.unit_circle_color, linestyle='--'))
-        # Resistance constant circles
+        # Resistance constant circles + labels
         r_outer = np.linspace(1.1, 10, self.num_r_lines)
         r_inner = np.linspace(0.01, 1, self.num_r_inner_lines)
-        for r in np.concatenate((r_inner, r_outer)):
+        for i, r in enumerate(np.concatenate((r_inner, r_outer))):
             z = r + 1j * np.linspace(-10, 10, 400)
             g = gamma_from_z(z, 1)
             self.ax.plot(g.real, g.imag, color=self.resistance_color, linewidth=0.8)
-        # Reactance constant circles
+            if i % self.label_resistance_every == 0:
+                idx = len(g) // 2
+                self.ax.text(g.real[idx], g.imag[idx], f"{r:.2f}", fontsize=6,
+                             color='black', rotation=90, rotation_mode='anchor')
+        # Reactance constant circles + labels
         x_vals = np.linspace(0.1, 10, self.num_x_lines)
-        for x in x_vals:
+        for j, x in enumerate(x_vals):
             for sign in (1, -1):
                 z = np.linspace(0.01, 10, 400) + 1j * sign * x
                 g = gamma_from_z(z, 1)
                 self.ax.plot(g.real, g.imag, color=self.reactance_color, linewidth=0.8)
+                if j % self.label_reactance_every == 0:
+                    zl = self.x_label_at_r + 1j * sign * x
+                    gl = gamma_from_z(zl, 1)
+                    # compute text angle
+                    p1 = g[100]; p2 = g[102]
+                    ang = angle_between((p1.real, p1.imag), (p2.real, p2.imag))
+                    self.ax.text(gl.real, gl.imag, f"j{sign*x:.2f}", fontsize=6,
+                                 color='black', rotation=ang, rotation_mode='anchor')
         # Reflection coefficients
         gL = gamma_from_z(ZL_n, 1)
         gIn = gamma_from_z(Zin_n, 1)
         mag_L = np.abs(gL)
-        # Plot points
+        # Plot points and SWR circle
         self.ax.plot(gL.real, gL.imag, 'ro', label='Load')
         self.ax.plot(gIn.real, gIn.imag, 'bo', label='Input')
-        # SWR circle
         self.ax.add_patch(plt.Circle((0, 0), mag_L, fill=False, color=self.gamma_circle_color))
-        # R=1 intersections
+        # R=1 line with intersections labeled
         if self.show_r1:
             x = np.linspace(-10, 10, 1000)
-            z = 1 + 1j * x
-            gr1 = gamma_from_z(z, 1)
-            self.ax.plot(gr1.real, gr1.imag, color=self.r1_color, label='R=1 circle')
-            diff = np.abs(np.abs(gr1) - mag_L)
+            pz = 1 + 1j * x
+            g1 = gamma_from_z(pz, 1)
+            self.ax.plot(g1.real, g1.imag, color=self.r1_color, label='R=1 Circle')
+            diff = np.abs(np.abs(g1) - mag_L)
             mask = x >= 0
             idxs = [np.where(mask)[0][np.argmin(diff[mask])], np.where(~mask)[0][np.argmin(diff[~mask])]]
             for idx in idxs:
-                p = gr1[idx]
-                self.ax.plot(p.real, p.imag, 'x', color=self.r1_color)
-                phi = np.angle(p)
-                phi_deg = np.degrees(phi)
+                p = g1[idx]
+                phi = np.angle(p); phi_deg = np.degrees(phi)
                 lam = (np.pi - phi) / (4 * np.pi)
-                off = 0.05
-                d = p / np.abs(p)
+                off = 0.05; d = p / np.abs(p)
                 self.ax.plot([0, d.real], [0, d.imag], color=self.r1_color, linestyle=':')
+                self.ax.plot(p.real, p.imag, 'x', color=self.r1_color)
                 self.ax.text(p.real * (2.75 + off), p.imag * (2.75 + off),
                              f"{lam:.3f}λ, {phi_deg:.1f}°",
                              color=self.r1_color, ha='center', va='center', fontsize=8)
                 self.ax.text(p.real * (2.5 + off), p.imag * (2.5 + off),
                              f"{p.real:.2f}+j{phi_deg:.2f}",
                              color=self.r1_color, ha='center', va='center', fontsize=8)
-        # Load phase line
+        # Load phase line endpoints
         if mag_L > 0:
             d = gL / mag_L
             self.ax.plot([d.real, -d.real], [d.imag, -d.imag],
                          color=self.radial_line_color, linestyle='--', label='Phase line')
             off = 0.05
-            for sign, point in [(1, d), (-1, -d)]:
-                phi = np.angle(point)
-                phi_deg = np.degrees(phi)
+            for sign, pt in [(1, d), (-1, -d)]:
+                phi = np.angle(pt); phi_deg = np.degrees(phi)
                 lam = (np.pi - phi) / (4 * np.pi) + (0.5 if sign == -1 else 0)
-                self.ax.plot(point.real, point.imag, 'o', color=self.radial_line_color)
-                self.ax.text(point.real * (1.25 + off), point.imag * (1.25 + off),
+                self.ax.plot(pt.real, pt.imag, 'o', color=self.radial_line_color)
+                self.ax.text(pt.real*(1.25+off), pt.imag*(1.25+off),
                              f"{lam:.3f}λ, {phi_deg:.1f}°",
                              color=self.radial_line_color, ha='center', va='center', fontsize=8)
-        # Outer markers
+        # Outer lambda/phase markers
         off = 0.05
-        markers = [(-1, 0, np.pi, 0.0), (0, 1, np.pi/2, 0.125), (1, 0, 0.0, 0.25), (0, -1, -np.pi/2, 0.375)]
+        markers = [(-1, 0, np.pi, 0.0), (0, 1, np.pi/2, 0.125), (1, 0, 0, 0.25), (0, -1, -np.pi/2, 0.375)]
         for x, y, phi, lam in markers:
-            phi_deg = np.degrees(phi)
-            text = f"{lam:.3f}λ, {phi_deg:.0f}°"
+            phi_deg = int(np.degrees(phi))
+            text = f"{lam:.3f}λ, {phi_deg}°"
             ha = 'right' if x < 0 else 'left' if x > 0 else 'center'
             va = 'bottom' if y > 0 else 'top' if y < 0 else 'center'
-            self.ax.text(x * (1 + off), y * (1 + off), text, ha=ha, va=va, fontsize=8)
-         # Black dot at Z_norm = 1 + 0j (center)
+            self.ax.text(x*(1+off), y*(1+off), text, ha=ha, va=va, fontsize=8)
+        # Black center dot and arrows
         self.ax.plot(0, 0, 'ko', label='Z_norm=1+0j')
-        # Dark‐gray arrows to N/W/S/E on outer circle
-        for x, y in [(0,1), (-1,0), (0,-1), (1,0)]:
-            self.ax.annotate('', xy=(x, y), xytext=(0, 0),
+        for x, y in [(0,1),(-1,0),(0,-1),(1,0)]:
+            self.ax.annotate('', xy=(x,y), xytext=(0,0),
                              arrowprops=dict(arrowstyle='->', color='darkgray'))
-        # Hide the Cartesian frame and ticks
-        self.ax.set_xticks([])
-        self.ax.set_yticks([])
-        for spine in self.ax.spines.values():
-            spine.set_visible(False)
-        # Final formatting
+        # Final legend and draw
+        leg = self.ax.legend(loc='upper right', fontsize=8)
+        leg.set_draggable(True)
         self.ax.set_xlim(-1.2, 1.2)
         self.ax.set_ylim(-1.2, 1.2)
         self.ax.set_aspect('equal')
-        self.ax.legend(loc='upper right', fontsize=8, draggable=True)
-        self.ax.axis('off') #hide the outer square box and grid
         self.draw()
 
     def animate_path(self):
@@ -177,7 +182,6 @@ class SmithChartCanvas(FigureCanvas):
                                               "PNG Files (*.png);;SVG Files (*.svg)")
         if path:
             self.fig.savefig(path)
-
 class ImpedancePanel(QWidget):
     def __init__(self, chart):
         super().__init__()
