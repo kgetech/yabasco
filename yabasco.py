@@ -22,11 +22,15 @@ import numpy as np
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QDockWidget, QWidget, QVBoxLayout, QLabel,
                              QLineEdit, QPushButton, QColorDialog, QSpinBox, QDoubleSpinBox,
                              QCheckBox, QAction, QFileDialog)
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtWidgets import QStyleFactory
 from PyQt5.QtCore import Qt, QTimer
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+# pick a dark background style
+plt.style.use('dark_background')
+
 
 def gamma_from_z(Z, Z0):
     with np.errstate(divide='ignore', invalid='ignore'):
@@ -45,14 +49,17 @@ class SmithChartCanvas(FigureCanvas):
     def __init__(self, parent=None):
         self.fig = Figure(figsize=(6, 6))
         self.ax = self.fig.add_subplot(111)
+        self.fig.patch.set_facecolor('#121212')
+        self.ax.set_facecolor('#121212')
         super().__init__(self.fig)
         self.setParent(parent)
         # Styling
-        self.unit_circle_color = 'gray'
-        self.resistance_color = 'lightgray'
-        self.reactance_color = 'lightgray'
-        self.gamma_circle_color = 'blue'
-        self.radial_line_color = 'green'
+        self.unit_circle_color    = 'white'
+        self.resistance_color     = 'dimgray'
+        self.reactance_color      = 'dimgray'
+        self.gamma_circle_color   = 'cyan'
+        self.radial_line_color    = 'lime'
+        
         # R=1 circle
         self.show_r1 = False
         self.r1_color = 'magenta'
@@ -353,6 +360,22 @@ class SmithChartWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    app.setStyle(QStyleFactory.create("Fusion"))
+    dark = QPalette()
+    dark.setColor(QPalette.Window,             QColor(53, 53, 53))
+    dark.setColor(QPalette.WindowText,         Qt.white)
+    dark.setColor(QPalette.Base,               QColor(25, 25, 25))
+    dark.setColor(QPalette.AlternateBase,      QColor(53, 53, 53))
+    dark.setColor(QPalette.ToolTipBase,        Qt.white)
+    dark.setColor(QPalette.ToolTipText,        Qt.white)
+    dark.setColor(QPalette.Text,               Qt.white)
+    dark.setColor(QPalette.Button,             QColor(53, 53, 53))
+    dark.setColor(QPalette.ButtonText,         Qt.white)
+    dark.setColor(QPalette.BrightText,         Qt.red)
+    dark.setColor(QPalette.Link,               QColor(42, 130, 218))
+    dark.setColor(QPalette.Highlight,          QColor(42, 130, 218))
+    dark.setColor(QPalette.HighlightedText,    Qt.black)
+    app.setPalette(dark)
     window = SmithChartWindow()
     window.resize(1000, 800)
     window.show()
