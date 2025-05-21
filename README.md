@@ -31,7 +31,7 @@ From an administrative powershell console run:
 
 ## For BASH/\*nix: Coming soon. 
 *Basically just do the same thing, but in penguin or wildebeest or whatever.*   
-*ALSO: chmod +x can come in digdogdangdandily. 
+*ALSO: chmod +x can come in digdogdangdandily.*
 Release Info:
 2025 05 21 03:23PM TODO: 
 - ~~Fix the labels on the chart curves~~
