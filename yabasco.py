@@ -169,7 +169,7 @@ class SmithChartCanvas(FigureCanvas):
             va = 'bottom' if y > 0 else 'top' if y < 0 else 'center'
             self.ax.text(x*(1+off), y*(1+off), text, ha=ha, va=va, fontsize=8)
         # Black center dot and arrows
-        self.ax.plot(0, 0, 'ko', label='Z_norm=1+0j')
+        self.ax.plot(0, 0, 'o', label='Z_norm=1+0j', color = 'white')
         for x, y in [(0,1),(-1,0),(0,-1),(1,0)]:
             self.ax.annotate('', xy=(x,y), xytext=(0,0),
                              arrowprops=dict(arrowstyle='->', color='darkgray'))
