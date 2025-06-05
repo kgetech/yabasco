@@ -17,14 +17,75 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ###########################################################################################
+
+param(
+    [Parameter(Mandatory=$False, Position=0, ValueFromPipeline=$false)]
+    [System.String]
+    $jupyter
+
+)
+
+Write-Host $jupyter
+
 # Create virtual environment
-python -m venv venv
+py -3.10 -m venv .venv
 
 # Activate the venv
-& ".\venv\Scripts\Activate.ps1"
+. .\.venv\Scripts\Activate.ps1
 
-# Install requirements
-pip install scikit-rf pyqt5 matplotlib numpy
+# Get Latest PIP
+python.exe -m pip install --upgrade pip
 
-# Start The Program
-python yabasco.py
+if($jupyter -eq "Y"){
+	# From inside your project folder (where “venv” lives):
+	$env:PROJECT_ROOT = (Get-Location).Path
+
+	function Initialize-LocalDirectory {
+		param (
+			[string[]]$NewDir
+		)
+		
+		foreach ($ND in $NewDir){
+			If(!(test-path -PathType container $env:PROJECT_ROOT\$ND))
+			{
+				  New-Item -ItemType Directory -Path $env:PROJECT_ROOT\ -Name $ND
+			}
+		}
+	}
+
+	Initialize-LocalDirectory -NewDir .jupyter\config, .jupyter\data, .jupyter\runtime
+
+	# Point Jupyter’s config folder to .\.jupyter\config
+	$env:JUPYTER_CONFIG_DIR = "$env:PROJECT_ROOT\.jupyter\config"
+
+	# Point Jupyter’s data files (extensions, kernelspecs, etc.) to .\.jupyter\data
+	$env:JUPYTER_DATA_DIR = "$env:PROJECT_ROOT\.jupyter\data"
+
+	# Point Jupyter’s runtime (kernel summaries, security tokens, socket files) to .\.jupyter\runtime 
+	$env:JUPYTER_RUNTIME_DIR = "$env:PROJECT_ROOT\.jupyter\runtime"
+	
+	# Install requirements
+	pip install numpy scikit-rf pyqt5 matplotlib jupyterlab notebook voila
+	
+	# Jupyter Generate Config
+	jupyter notebook --generate-config
+	jupyter lab --generate-config
+	
+
+
+	# Create Requirements file
+	pip freeze > requirements.txt
+	
+	# Start jupyter
+	jupyter lab
+} else {
+	# Install requirements
+	pip install numpy scikit-rf pyqt5 matplotlib 
+	# Start The Program
+	python .\src\yabasco.py
+}
+
+
+
+
+
