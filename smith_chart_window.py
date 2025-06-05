@@ -17,55 +17,63 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ###########################################################################################
-# language: python
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QSplitter
-from smith_chart_renderer import SmithChartCanvas
-from impedance_input_panel import ImpedancePanel
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMainWindow, QDockWidget, QAction, QVBoxLayout, QSplitter
+from smith_chart_canvas import SmithChartCanvas
+from impedance_input_panel import ImpedancePanelManager
 from grid_settings_panel import GridSettingsPanel
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Main Application Window
+# ─────────────────────────────────────────────────────────────────────────────
 
 class SmithChartWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.chart = SmithChartCanvas()
-        self.panel_mgr = {}  # panel_id -> ImpedancePanel
-        self.next_id = 1
+        self.setWindowTitle("YaBaSco New – Smith Chart Explorer")
+        self.resize(1100, 800)
 
-        # layout
-        root = QWidget()
-        layout = QVBoxLayout(root)
-        splitter = QSplitter()
-        layout.addWidget(splitter)
-        splitter.addWidget(self.chart)
+        # 1) Central SmithChartCanvas
+        self.chart = SmithChartCanvas(self)
+        self.setCentralWidget(self.chart)
 
-        self.controls = QWidget()
-        c_layout = QVBoxLayout(self.controls)
-        self.controls.setLayout(c_layout)
-        splitter.addWidget(self.controls)
+        # 2) Right dock: GridSettingsPanel
+        grid_dock = QDockWidget("Settings", self)
+        self.grid_settings = GridSettingsPanel(self.chart)
+        grid_dock.setWidget(self.grid_settings)
+        grid_dock.setAllowedAreas(Qt.RightDockWidgetArea)
+        self.addDockWidget(Qt.RightDockWidgetArea, grid_dock)
 
-        # “Add Panel” button
-        from PyQt5.QtWidgets import QPushButton
-        btn = QPushButton("Add Impedance")
-        btn.clicked.connect(self.add_panel)
-        c_layout.addWidget(btn)
+        # 3) Left dock: ImpedancePanelManager
+        dock_left = QDockWidget("Load Impedances", self)
+        self.panel_mgr = ImpedancePanelManager(self.chart)
+        dock_left.setWidget(self.panel_mgr)
+        dock_left.setAllowedAreas(Qt.LeftDockWidgetArea)
+        self.addDockWidget(Qt.LeftDockWidgetArea, dock_left)
 
-        # grid settings
-        grid_panel = GridSettingsPanel(self.chart._draw_static_elements)
-        c_layout.addWidget(grid_panel)
+        # 4) Menu bar → File → Save Chart / Exit
+        self._create_menu()
 
-        self.setCentralWidget(root)
 
-    def add_panel(self) -> None:
-        pid = self.next_id
-        self.next_id += 1
-        panel = ImpedancePanel(pid,
-                               update_cb=self.chart.update_impedance,
-                               remove_cb=self._remove_panel)
-        self.panel_mgr[pid] = panel
-        self.controls.layout().addWidget(panel)
+    def _create_menu(self):
+        mb = self.menuBar()
+        file_menu = mb.addMenu("&File")
+        save_action = QAction("&Save Chart...", self)
+        save_action.triggered.connect(self._save_chart)
+        exit_action = QAction("E&xit", self)
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(save_action)
+        file_menu.addSeparator()
+        file_menu.addAction(exit_action)
 
-    def _remove_panel(self, pid: int) -> None:
-        panel = self.panel_mgr.pop(pid, None)
-        if panel:
-            panel.setParent(None)
-            panel.deleteLater()
-            self.chart.remove_impedance(pid)
+
+    def _save_chart(self):
+        from PyQt5.QtWidgets import QFileDialog
+        fn, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Chart",
+            "",
+            "PNG (*.png);;SVG (*.svg)"
+        )
+        if fn:
+            self.chart.save_chart(fn)
