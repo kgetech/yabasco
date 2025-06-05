@@ -1,15 +1,22 @@
 ###########################################################################################
-## yabasco_new.py: Corrected Smith Chart GUI
+## yabasco: Yet Another BAsic Smith Chart gizmO
+## Copyright (C) 2025  Kyle Thomas Goodman
+## email: kylegoodman@kgindustrial.com
+## GitHub: https://github.com/kgetech/
 ##
-##  • Impedances with negative reactance (–jX) now truly appear in the lower half of the chart.
-##  • Γ is computed by first normalizing zL to z0, i.e.  Γ = (z_norm – 1)/(z_norm + 1).
-##  • Reactance arcs (±jX) are drawn exactly “textbook style” (centers at (1,±1/X)).
-##  • Right-hand Settings dock matches yabasco_3.py fields and your screenshot.
-##  • Left-hand Impedance panels remain the same, except for the corrected Γ formula.
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
 ##
-## Author: Kyle Thomas Goodman (modified)
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ###########################################################################################
-
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
