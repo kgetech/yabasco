@@ -577,8 +577,9 @@ class ImpedancePanel(QWidget):
         main_lay.addWidget(self.swr_label)
 
         # Connect signals
-        for w in (self.z0_input, self.y0_input, self.zl_input, self.yl_input):
-            w.textChanged.connect(self._on_change)
+        for widget in (self.z0_input, self.y0_input, self.zl_input, self.yl_input):
+            widget.textEdited.connect(self._on_change)
+            widget.editingFinished.connect(lambda w=widget: self._on_edit_finished(w))
         self.color_btn.clicked.connect(self._on_pick_color)
         self.remove_btn.clicked.connect(self._on_remove)
         self.tog_swrc_btn.clicked.connect(self._tog_swrc)
@@ -597,70 +598,18 @@ class ImpedancePanel(QWidget):
 
     def _on_change(self):
         """
-        Recompute based on current contents of Z₀, Y₀, ZL, YL fields:
-          - If YL≠0 → ZL=1/YL (and update ZL field)
-          - If Y₀≠0 → Z₀=1/Y₀ (and update Z₀ field)
-          - Compute z_norm = zL / z0
-          - Γ = (z_norm – 1)/(z_norm + 1), SWR = (1+|Γ|)/(1–|Γ|)
-          - Update self.gamma_label & self.swr_label
-          - Finally call chart.update_impedance(self.panel_id, zL, z0)
+        Called on each user edit to update the chart.
+        Do *not* re‐set widget text here!
         """
+        # parse all four inputs
         try:
-            z0 = complex(self.z0_input.text())
-        except Exception:
+            zL = complex(self.zl_input.text().replace('i', 'j'))
+            yl = complex(self.yl_input.text().replace('i', 'j'))
+            z0 = complex(self.z0_input.text().replace('i', 'j'))
+            y0 = complex(self.y0_input.text().replace('i', 'j'))
+        except ValueError:
             return
-        try:
-            y0 = complex(self.y0_input.text())
-        except Exception:
-            y0 = 0 + 0j
 
-        try:
-            zL = complex(self.zl_input.text())
-        except Exception:
-            return
-        try:
-            yL = complex(self.yl_input.text())
-        except Exception:
-            yL = 0 + 0j
-
-        # If user provided ZL, override YL:
-        if zL != 0 + 0j:
-            try:
-                yL = 1.0 / zL
-                self.yl_input.blockSignals(True)
-                self.yl_input.setText(self._format_complex(yL))
-                self.yl_input.blockSignals(False)
-            except Exception:
-                pass
-#
-        # If user provided Z₀, override Y₀:
-        if z0 != 0 + 0j:
-            try:
-                y0 = 1.0 / z0
-                self.y0_input.blockSignals(True)
-                self.y0_input.setText(self._format_complex(y0))
-                self.y0_input.blockSignals(False)
-            except Exception:
-                pass
-        # If user provided YL, override ZL:
-        if yL != 0 + 0j:
-            try:
-                zL = 1.0 / yL
-                self.zl_input.blockSignals(True)
-                self.zl_input.setText(self._format_complex(zL))
-                self.zl_input.blockSignals(False)
-            except Exception:
-                pass
-
-        # If user provided Y₀, override Z₀:
-        if y0 != 0 + 0j:
-            try:
-                z0 = 1.0 / y0
-                self.z0_input.blockSignals(True)
-                self.z0_input.setText(self._format_complex(z0))
-                self.z0_input.blockSignals(False)
-            except Exception:
-                pass
 
         # Compute Γ & SWR, but first normalize:
         if z0 == 0:
@@ -696,6 +645,22 @@ class ImpedancePanel(QWidget):
         self.color_btn.setStyleSheet(f"background: {hexcol}")
         self.chart.update_impedance(self.panel_id, color=hexcol)
 
+    def _on_edit_finished(self, widget: QLineEdit):
+        """
+        Once the user leaves the field, re‐format it and fire a final update.
+        """
+        text = widget.text().strip()
+        try:
+            val = complex(text.replace('i', 'j'))
+        except ValueError:
+            return
+        nice = self._format_complex(val)
+        # block signals so we don’t immediately recurse
+        widget.blockSignals(True)
+        widget.setText(nice)
+        widget.blockSignals(False)
+        # push one last chart update with the formatted value
+        self._on_change()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
