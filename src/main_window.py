@@ -17,13 +17,10 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ###########################################################################################
-from PyQt5.QtCore import QRegularExpression
-from PyQt5.QtGui  import QRegularExpressionValidator
 
-class ComplexValidator(QRegularExpressionValidator):
-    def __init__(self, parent=None):
-        rx = QRegularExpression(
-            r"^[+-]?\d*\.?\d+([eE][+-]?\d+)?"
-            r"([+-]\d*\.?\d+([eE][+-]?\d+)?)?[ij]?$"
-        )
-        super().__init__(rx, parent)
+from PyQt5.QtWidgets import QMainWindow
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+

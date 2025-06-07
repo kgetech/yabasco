@@ -23,8 +23,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QApplication
 
-
-from src.smith_chart_window import SmithChartWindow
+from src.main_window import MainWindow
 
 def main():
     app = QApplication(sys.argv)
@@ -47,7 +46,7 @@ def main():
     dark.setColor(QPalette.HighlightedText,    Qt.black)
     app.setPalette(dark)
 
-    window = SmithChartWindow()
+    window = MainWindow()
     window.show()
     sys.exit(app.exec_())
 

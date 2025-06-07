@@ -37,7 +37,7 @@ py -3.10 -m venv .venv
 python.exe -m pip install --upgrade pip
 
 # Install requirements
-pip install numpy scikit-rf pyqt5 matplotlib pyyaml
+pip install numpy scikit-rf pyqt5 matplotlib pyyaml requests
 
 if($jupyter -eq "Y"){
 	# From inside your project folder (where “venv” lives):
