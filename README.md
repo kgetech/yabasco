@@ -37,6 +37,16 @@ Release Info:
 
 ## Project Journal
 
+### 2025-06-07 04:50 PM: Rewriting Begins
+- Gutted the project.
+- Added a main_window module.
+- Added a data_management module.
+  - Window Settings
+  - Chart Settings
+  - Chart Objects (impedances, etc)
+    - Chart Object Settings (line colors, styles, labels, etc)
+  - Session Save and Load Serialization (TODO)
+
 ### 2025-06-07 01:17 PM: v0.0.2
 - Final working version built with ChatGPT: Rebuilding the project from scratch after this commit. 
 - This release is to look at how far the project could get with ChatGPT alone, and for reviewing some of the code implementations. 
