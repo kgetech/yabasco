@@ -51,9 +51,6 @@ if($jupyter -eq "Y"){
 
 	# Start jupyter
 	jupyter lab
-} else {
-	# Start The Program
-	python .\src\yabasco.py
 }
 
 

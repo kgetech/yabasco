@@ -28,6 +28,10 @@ run setup_env.ps1 from a user-level (not administrative) powershell console.
 *If you can't execute the .ps1 script:*
 From an administrative powershell console run:
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+	
+## Run Instructions (Vindoge 11):
+- If not inside (venv)--*"(venv)" does not appear to the left of your command-line prompt*: ***run:*** start_env.ps1
+- Once inside (venv), ***run:*** python yabasco.py
 
 ## For BASH/\*nix: Coming soon. 
 *Basically just do the same thing, but in penguin or wildebeest or whatever.*   

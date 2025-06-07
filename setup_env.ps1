@@ -36,6 +36,9 @@ py -3.10 -m venv .venv
 # Get Latest PIP
 python.exe -m pip install --upgrade pip
 
+# Install requirements
+pip install numpy scikit-rf pyqt5 matplotlib pyyaml
+
 if($jupyter -eq "Y"){
 	# From inside your project folder (where “venv” lives):
 	$env:PROJECT_ROOT = (Get-Location).Path
@@ -64,8 +67,8 @@ if($jupyter -eq "Y"){
 	# Point Jupyter’s runtime (kernel summaries, security tokens, socket files) to .\.jupyter\runtime 
 	$env:JUPYTER_RUNTIME_DIR = "$env:PROJECT_ROOT\.jupyter\runtime"
 	
-	# Install requirements
-	pip install numpy scikit-rf pyqt5 matplotlib jupyterlab notebook voila
+	# Install jupyter requirements
+	pip install jupyterlab notebook voila
 	
 	# Jupyter Generate Config
 	jupyter notebook --generate-config
@@ -78,12 +81,7 @@ if($jupyter -eq "Y"){
 	
 	# Start jupyter
 	jupyter lab
-} else {
-	# Install requirements
-	pip install numpy scikit-rf pyqt5 matplotlib 
-	# Start The Program
-	python .\src\yabasco.py
-}
+} 
 
 
 
