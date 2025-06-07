@@ -21,8 +21,33 @@ from typing import Tuple
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from dataclasses import dataclass, field
+from typing    import Dict
+from .extra_utils import angle_between, gamma_from_normalized, swr_from_gamma
 
-from extra_utils import angle_between, gamma_from_normalized
+@dataclass
+class ImpedanceConfig:
+    zL: complex = 50+50j
+    z0: complex = 50+0j
+    yL: complex = 0.01 - 0.01j
+    y0: complex = 0.02 + 0.00j
+    color: tuple = (0.0, 0.0, 1.0)    # RGB 0–1 default
+    to_gen: bool = True
+    swr:    float = 0.0
+    ref_coeff: complex = 1 + 0j
+    ref_coeff_degrees: int = 0
+    ref_coeff_mag: float = 0.0
+    tau:    float = 0.0
+    show_swr: bool = False
+    show_adm_intersection: bool = False
+    show_swr_r1_intersection: bool = False
+    #getter for attributes
+    def get(self, name: str, default=None):
+        """
+        Support dict‐style lookup so that opts.get("foo") works
+        even though we're using an object under the hood.
+        """
+        return getattr(self, name, default)
 
 # Data container for one impedance/admittance trace
 TraceData = Tuple[np.ndarray, np.ndarray]
@@ -55,6 +80,9 @@ class SmithChartCanvas(FigureCanvas):
         self.fig.patch.set_facecolor('#121212')   # match Fusion dark theme
         super().__init__(self.fig)
         self.setParent(parent)
+        # ─── Additional Impedance Object Value Displays ────────────────────────────────────
+        self.impedances: Dict[int, ImpedanceConfig] = {}
+        self.imp_opts = {}  # panel_id -> options dict
 
         # ─── Chart parameters (defaults) ───────────────────────────────────
         # Resistance circles:
@@ -70,14 +98,12 @@ class SmithChartCanvas(FigureCanvas):
         self.label_reactance_every = 2   # label every 2nd reactance arc
 
         # Toggles:
-        self.show_radial = True
         self.show_unit   = True
         self.show_r1     = True
 
         # Colors:
         self.resistance_color   = "#323232"
         self.reactance_color    = "#323232"
-        self.radial_line_color  = "#323232"
         self.unit_circle_color  = "#323232"
         self.gamma_circle_color = "#323232"
         self.r1_color           = "#e6550d"
@@ -283,20 +309,6 @@ class SmithChartCanvas(FigureCanvas):
                 )
 
 
-    def _draw_radial_lines(self):
-        """Draw dashed radial lines from the origin at equally spaced angles."""
-        angles = np.linspace(0, 2*np.pi, self.num_x_lines, endpoint=False)
-        for ang in angles:
-            x = [0.0, np.cos(ang)]
-            y = [0.0, np.sin(ang)]
-            self.ax.plot(
-                x, y,
-                color=self.radial_line_color,
-                lw=self.grid_lw, ls="--",
-                solid_capstyle=self.capstyle
-            )
-
-
     def _draw_unit_circle(self):
         """Draw the unit circle (|Γ|=1) as a thin dashed ring."""
         theta = np.linspace(0, 2*np.pi, 500)
@@ -310,6 +322,21 @@ class SmithChartCanvas(FigureCanvas):
             solid_capstyle=self.capstyle
         )
 
+    def _trace_color(self, panel_id):
+        """
+        Return the QColor (or matplotlib color spec) for the given trace.
+        Falls back to cycling through COLOR_CYCLE if the config has no explicit color.
+        """
+        cfg = self.impedances.get(panel_id)
+        if cfg is None:
+            raise KeyError(f"No impedance registered for panel_id={panel_id}")
+        # If user picked a color, use that:
+        if getattr(cfg, "color", None):
+            return cfg.color
+        # Otherwise pick from the cycle based on insertion order:
+        ids = list(self.impedances.keys())
+        idx = ids.index(panel_id)
+        return self.COLOR_CYCLE[idx % len(self.COLOR_CYCLE)]
 
     def _draw_resistance_labels(self):
         """
@@ -347,100 +374,49 @@ class SmithChartCanvas(FigureCanvas):
                     color=self.resistance_color
                 )
 
-    def _draw_impedances(self):
-        """
-        Plot each impedance in self.impedances:
-          1) Normalize zL to z0 → z_norm = zL / z0
-          2) Γ = (z_norm – 1)/(z_norm + 1)
-          3) Dot at (Re{Γ}, Im{Γ})  (so negative‐Im falls in lower half)
-          4) Dashed radial line from origin → that dot
-          5) Annotate |Γ| and ∠Γ° next to the dot
-          6) If show_swr is True, draw the SWR circle (|Γ| constant) in the impedance color
-        """
-        for pid, data in self.impedances.items():
-            zL = data['zL']
-            z0 = data['z0']
-            color = data['color']
+    def register_impedance(self, panel_id: int, cfg: ImpedanceConfig = None):
+        """Call this when a new panel is created."""
+        self.impedances[panel_id] = cfg or ImpedanceConfig()
 
-            try:
-                z_norm = zL / z0
-                gamma = gamma_from_normalized(z_norm)
-                g_re = float(np.real(gamma))
-                g_im = float(np.imag(gamma))
-
-                # 3) Plot the marker
-                self.ax.plot(g_re, g_im, 'o', color=color, label=f"Z{pid}")
-
-                # 4) Radial dashed line from (0,0) → (g_re, g_im)
-                self.ax.plot([0.0, g_re], [0.0, g_im], color=color, lw=0.8, ls=':')
-
-                # 5) Annotate magnitude & angle
-                mag = abs(gamma)
-                ang = np.degrees(np.angle(gamma))
-                text = f"|Γ|={mag:.2f}\n{ang:.1f}°"
-                self.ax.text(g_re * 1.1, g_im * 1.1, text,
-                             color=color, ha='center', va='center', fontsize=7)
-
-                # 6) Draw SWR circle if toggled on for this pid
-                if data.get('show_swr', False):
-                    swr_radius = mag
-                    theta = np.linspace(0, 2 * np.pi, 300)
-                    x_circle = swr_radius * np.cos(theta)
-                    y_circle = swr_radius * np.sin(theta)
-                    self.ax.plot(
-                        x_circle, y_circle,
-                        color=color, ls='--', lw=0.8
-                    )
-
-            except Exception:
-                # In case z0 == –zL or other exceptional cases, skip plotting
-                continue
-
-    def update_impedance(self, pid, zL=None, z0=None, color=None):
-        """
-        Called whenever a single ImpedancePanel changes. We store the new zL,z0,color
-        (and now a show_swr flag) into self.impedances[pid] and then redraw the chart.
-        """
-        if pid not in self.impedances:
-            default_color = self.COLOR_CYCLE[len(self.impedances) % len(self.COLOR_CYCLE)]
-            self.impedances[pid] = {
-                'zL': zL or (50 + 0j),
-                'z0': z0 or (50 + 0j),
-                'color': default_color,
-                'show_swr': False
-            }
-
-        if zL is not None:
-            self.impedances[pid]['zL'] = zL
-        if z0 is not None:
-            self.impedances[pid]['z0'] = z0
-        if color is not None:
-            self.impedances[pid]['color'] = color
-
+    def remove_impedance(self, panel_id: int):
+        """Clean up when a panel is removed."""
+        if panel_id in self.impedances:
+            del self.impedances[panel_id]
+        # then redraw
         self._draw_chart()
 
-    def tog_swrc(self, pid):
+    def update_impedance(self, panel_id, **kwargs):
         """
-        Toggle whether the SWR circle for impedance `pid` is drawn.
+        Called whenever a single ImpedancePanel changes. We store the new zL,z0,color
+        (and now a show_swr flag) into self.impedances[panel_id] and then redraw the chart.
         """
-        if pid in self.impedances:
-            current = self.impedances[pid].get('show_swr', False)
-            self.impedances[pid]['show_swr'] = not current
-            self._draw_chart()
+        if panel_id not in self.impedances:
+            raise KeyError(f"no impedance registered for panel_id={panel_id}")
 
-    def remove_impedance(self, pid):
-        """Remove a given panel’s trace from self.impedances and redraw."""
-        if pid in self.impedances:
-            del self.impedances[pid]
-            self._draw_chart()
+        cfg = self.impedances[panel_id]
+        for field_name, new_val in kwargs.items():
+            if new_val is None:
+                continue
+            if not hasattr(cfg, field_name):
+                raise AttributeError(f"{field_name!r} is not a valid ImpedanceConfig field")
+            setattr(self.impedances[panel_id], field_name, new_val)
+        self._draw_chart()
 
+    def tog_swrc(self, panel_id):
+        """Toggle the SWR‐curve flag for one trace, redraw and return new state."""
+        if panel_id not in self.impedances:
+            raise KeyError(f"no impedance registered for panel_id={panel_id}")
+        cfg = self.impedances[panel_id]
+        current = getattr(cfg, "show_swr", False)
+        cfg.show_swr = not current
+        self._draw_chart()
+        return cfg.show_swr
 
     def update_grid(self,
                     num_r_outer=None, num_r_inner=None, num_x=None,
                     label_r_every=None, label_x_every=None,
-                    x_label_at_r=None, show_radial=None,
-                    show_unit=None, show_r1=None,
-                    grid_color=None, r1_color=None, γ_color=None):
+                    x_label_at_r=None, show_unit=None, show_r1=None,
+                    grid_color=None, r1_color=None, gamma_color=None):
         """
         Called by the “Settings” panel on the right.  Any parameter that’s not None
         will be updated; then we trigger a full redraw of the chart.
@@ -469,11 +445,99 @@ class SmithChartCanvas(FigureCanvas):
             self.gamma_circle_color = grid_color
         if r1_color is not None:
             self.r1_color = r1_color
-        if γ_color is not None:
-            self.gamma_circle_color = γ_color
+        if gamma_color is not None:
+            self.gamma_circle_color = gamma_color
 
         self._draw_chart()
 
+    def update_impedance_options(self, panel_id, **opts):
+        """
+        Update drawing options for a given impedance trace.
+        Any keys in opts (e.g. show_swr, show_adm_intersection,
+        show_wav_to_gen, show_wav_to_load, show_gamma_angle,
+        show_trans_angle, etc.) will be merged into self.imp_opts[panel_id].
+        """
+        # merge into existing options dict (or start fresh)
+        existing = self.imp_opts.get(panel_id, {})
+        existing.update(opts)
+        self.imp_opts[panel_id] = existing
+
+        # redraw chart with new options
+        self._draw_chart()
+
+
+    def _draw_impedances(self):
+        for panel_id, imp in self.impedances.items():
+            # imp is an ImpedanceConfig, so extract its fields
+            zl = imp.zL
+            z0 = imp.z0
+            yl = imp.yL
+            y0 = imp.y0
+            z_norm = zl / z0
+            g = gamma_from_normalized(z_norm)
+            swr = swr_from_gamma(g)
+            g_re, g_im = g.real, g.imag
+            mag = abs(g)
+            if mag == 0:
+                continue
+
+            # compute a small extension beyond |Γ|=1
+            ext = 1.02
+            dx, dy = g_re / mag, g_im / mag
+
+            # plot full line from −ext→+ext
+            xs = np.array([-dx, dx]) * ext
+            ys = np.array([-dy, dy]) * ext
+            color = self._trace_color(panel_id)
+            self.ax.plot(xs, ys, color=color, lw=0.8, ls=':')
+
+            # draw the point at +mag
+            self.ax.plot(dx * mag, dy * mag, 'o', color=color)
+
+            # draw SWR circle if enabled
+            if imp.show_swr:
+                theta = np.linspace(0, 2 * np.pi, 360)
+                x = mag * np.cos(theta)
+                y = mag * np.sin(theta)
+                self.ax.plot(x, y, color=color, ls='--', lw=1)
+
+            # draw admittance‐intersection if enabled
+            if imp.show_adm_intersection:
+                # admittance point is at γ_y = -γ_z ⇒ (-dx*mag, -dy*mag)
+                self.ax.plot(
+                    -dx * mag,
+                    -dy * mag,
+                    marker='o',
+                    mfc='none',  # hollow
+                    mec=color,
+                    ms=6,
+                )
+
+            # optional labels
+            opts = self.imp_opts.get(panel_id, {})
+            theta_g = np.angle(g, deg=True)
+
+            #Convert to Lambda
+            d_from_load = 0.25 - 0.25 * theta_g / 180
+
+            # just beyond endpoints
+            if opts.get('show_gamma_angle'):
+                self.ax.text(dx * ext * 1.1,
+                             dy * ext * 1.1,
+                             f"Γ:{theta_g:.1f}°",
+                             fontsize=8, color=color,
+                             ha='center', va='bottom')
+
+            # at midpoints
+            if opts.get('show_wav_to_gen'):
+                self.ax.text(dx * ext * 1.1,
+                             dy * ext * 1.1,
+                             rf"${d_from_load:.2f}\,\lambda$",
+                             fontsize=7, color=color,
+                             ha='center', va='top')
+
+        # trigger a redraw
+        self.fig.canvas.draw_idle()
 
     def save_chart(self, path):
         """Save the current figure to a file (PNG, SVG, etc.)."""

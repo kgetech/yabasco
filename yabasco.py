@@ -24,7 +24,7 @@ from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QApplication
 
 
-from smith_chart_window import SmithChartWindow
+from src.smith_chart_window import SmithChartWindow
 
 def main():
     app = QApplication(sys.argv)
