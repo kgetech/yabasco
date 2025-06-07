@@ -28,16 +28,20 @@ run setup_env.ps1 from a user-level (not administrative) powershell console.
 *If you can't execute the .ps1 script:*
 From an administrative powershell console run:
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-	
-## Run Instructions (Vindoge 11):
-- If not inside (venv)--*"(venv)" does not appear to the left of your command-line prompt*: ***run:*** start_env.ps1
-- Once inside (venv), ***run:*** python yabasco.py
 
 ## For BASH/\*nix: Coming soon. 
 *Basically just do the same thing, but in penguin or wildebeest or whatever.*   
 *ALSO: chmod +x can come in digdogdangdandily.*
 Release Info:
-2025 05 21 03:23PM TODO: 
+
+
+## Project Journal
+
+### 2025-06-07 01:17 PM: v0.0.2
+- Final working version built with ChatGPT: Rebuilding the project from scratch after this commit. 
+- This release is to look at how far the project could get with ChatGPT alone, and for reviewing some of the code implementations. 
+
+### 2025-05-21 03:23 PM: 
 - ~~Fix the labels on the chart curves~~
 - Add more labels (all of them)
 - Make points draggable
