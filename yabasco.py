@@ -17,7 +17,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ###########################################################################################
-import sys
+import sys, getopt
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QPalette
@@ -25,7 +25,9 @@ from PyQt5.QtWidgets import QApplication
 
 from src.main_window import MainWindow
 
-def main():
+from src.data_management import DataManagement
+
+def main(save_file: str = "save.yaml"):
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
 
@@ -45,6 +47,32 @@ def main():
     dark.setColor(QPalette.Highlight,          QColor(42, 130, 218))
     dark.setColor(QPalette.HighlightedText,    Qt.black)
     app.setPalette(dark)
+
+    # Command Line Argument Parsing
+    args = sys.argv[1:]
+    short_options = "hs:"
+    long_options = ["help", "save-file="]
+    try:
+        arguments, values = getopt.getopt(args, short_options, long_options)
+        for currentArgument, currentValue in arguments:
+            if currentArgument in ("-h", "--help"):
+                print("yabasco.py -s <save-file>")
+                sys.exit(2)
+            elif currentArgument in ("-s", "--save-file"):
+                save_file = currentValue
+                print(f"Save file is {save_file}")
+
+    except getopt.error as err:
+        print(str(err))
+        sys.exit(2)
+
+    # Initialize Data Management Object
+    try:
+        session = DataManagement(save_file)
+    except FileNotFoundError:
+        print(f"Save file {save_file} not found. Creating new save file.")
+        file = open(save_file, "w")
+        file.close()
 
     window = MainWindow()
     window.show()

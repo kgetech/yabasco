@@ -37,15 +37,16 @@ Release Info:
 
 ## Project Journal
 
-### 2025-06-07 04:50 PM: Rewriting Begins
-- Gutted the project.
-- Added a main_window module.
-- Added a data_management module.
+### 2025-06-07 07:18 PM: Rewriting Begins
+- Gutted the project
+- Added a main_window module
+- Added a data_management module
   - Window Settings
   - Chart Settings
   - Chart Objects (impedances, etc)
     - Chart Object Settings (line colors, styles, labels, etc)
-  - Session Save and Load Serialization (TODO)
+  - Session Save and Load Serialization (WIP)
+    - Seems saving to .yaml works reasonably well
 
 ### 2025-06-07 01:17 PM: v0.0.2
 - Final working version built with ChatGPT: Rebuilding the project from scratch after this commit. 
