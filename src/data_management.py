@@ -1,122 +1,196 @@
-import yaml
-from dataclasses import dataclass, field
+###############################################################################
+## yabasco: Yet Another BAsic Smith Chart gizmO
+## Copyright (C) 2025  Kyle Thomas Goodman
+## email: kylegoodman@kgindustrial.com
+## GitHub: https://github.com/kgetech/
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <https://www.gnu.org/licenses/>.
+###############################################################################
+## Purpose: Core data structures, isolated from the GUI.
+###############################################################################
+
+import yaml, yaml_everywhere
+from dataclasses import dataclass, field, asdict
+from abc import ABC, abstractmethod
 
 from PyQt5.QtGui import QColor, QFont, QIcon, QWindow
 
-def load_config(config_file):
-    with open(config_file, 'r') as stream:
-        try:
-            config = yaml.safe_load(stream)
-        except yaml.YAMLError as yaml_exception:
-            print(yaml_exception)
-    return config
+# Get Constructors and Representers from yaml_everywhere.py
+import yaml_everywhere
+yaml_everywhere.update_yams()
 
-@dataclass(init=True)
-class SaveFileStructure:
-    window_settings = {
-        "window_title": str,
-        "window_size": QWindow.Size,
-        "window_position": QWindow.Position,
-        "window_icon_location": str,
-        "window_icon": QIcon,
-        "window_background_color": QWindow.Color,
-        "window_foreground_color": QWindow.Color,
-        "window_font": str,
-        "window_font_size": int,
-        "window_font_style": QFont.Style,
-        "window_font_weight": QFont.Weight
-    },
-    chart_settings = {
-        "background": QColor,
-        "size": QWindow.Size,
-        "position": QWindow.Position,
-        "label_font": QFont.Style,
-        "label_font_size": int,
-        "label_font_style": QFont.Style,
-        "label_font_weight": QFont.Weight,
-        "show_impedance_grid": bool,
-        "show_reactance_grid": bool,
-        # For adjusting the base grid of the chart.
-        "regions_count": int,
-        "regions":{
-            "starting_angle": int,
-            "ending_angle": int,
-            "color": QColor,
-            "line_width": int,
-            "line_style": str,
-            "line_dash": str,
-        }
-    },
+@dataclass
+class DataManagementAbstract(ABC):
+    BackgroundColor: QColor = field(default_factory=lambda: QColor("white"))
+    ForegroundColor: QColor = field(default_factory=lambda: QColor("white"))
+    # Titles
+    TitleFont: QFont.Style = field(default=QFont.Style)
+    TitleFontSize: int = field(default=8)
+    TitleFontStyle: QFont.Style = field(default=QFont.Style)
+    TitleFontWeight: QFont.Weight = field(default=QFont.Weight)
+    TitleFontColor: QColor = field(default_factory=lambda: QColor("white"))
+    # Labels
+    LabelFont: QFont.Style = field(default=QFont.Style)
+    LabelFontSize: int = field(default=8)
+    LabelFontStyle: QFont.Style = field(default=QFont.Style)
+    LabelFontWeight: QFont.Weight = field(default=QFont.Weight)
+    LabelFontColor: QColor = field(default_factory=lambda: QColor("white"))
+    # For Specific Line or Point Objects
+    ObjectCount: int = field(default=0)
+    ObjectColor: QColor = field(default_factory=lambda: QColor("white"))
+    ObjectLineWidth: int = field(default=1)
+    ObjectLineStyle: str = field(default="solid")
+    ObjectLineDash: str = field(default="")
+    # Visibility
+    Visible: bool = field(default=True)
 
-    _chart_object_template = {
-        "number": int,
-        "type": str, #impedance admittance or centerline trace
-        "mode": str, # displaying: impedance or admittance
-        "impedance": complex,
-        "admittance": complex,
-        "reflection_coefficient": complex,
-        "reflection_phase": float,
-        "reflection_magnitude": float,
-        "standing_wave_ratio": float,
-        "wavelengths_towards_generator": float,
-        "intersections_with_unity": {
-            "a": complex,
-            "b": complex
-        },
-        "draggable": bool,
-        "snap_to_lines": bool,
-        "snap_to_points": bool,
-        "visible": bool,
-        "trace_resistance": bool,
-        "trace_reactance": bool,
-        "color": QColor,
-        "line_width": int,
-        "line_style": str,
-        "line_dash": str,
-        "line_dash_offset": int,
-    }
+@dataclass
+class ChartRegionsTemplate(DataManagementAbstract,ABC):
+    # Using Constant Reactance Lines, so specify the complex portion
+    StartingReactance: int = field(default=-90)
+    EndingReactance: int = field(default=90)
+    ReactanceLineDensity: int = field(default=5)
+    # Using Constant Resistance Lines, so specify the real portion
+    StartingResistance: int = field(default=1000)
+    EndingResistance: int = field(default=1)
+    ResistanceLineDensity: int = field(default=5)
 
-    chart_objects_list = {
-        "number_of_objects": int,
-        "objects": list,
+@dataclass
+class RfObjectTemplate(DataManagementAbstract):
+    # For RF Object indexed by Number
+    Number: int = 1
+    # How RF Object is Instantiated: impedance, admittance, or centerline trace
+    Type: str = field(default="impedance")
+    # Mode is about displaying impedance or admittance
+    Mode: str = field(default="impedance")
+    Impedance: complex = field(default=complex(0,0))
+    Admittance: complex = field(default=complex(0,0))
+    ReflectionCoefficient: complex = field(default=complex(0,0))
+    ReflectionPhase: float = field(default=0.0)
+    ReflectionMagnitude: float = field(default=0.0)
+    StandingWaveRatio: float = field(default=0.0)
+    WavelengthsTowardsGenerator: float = field(default=0.0)
+    IntersectionWithUnityA: complex = field(default=complex(1,0))
+    IntersectionWithUnityB: complex = field(default=complex(1,0))
+    Draggable: bool = field(default=False)
+    SnapToLines: bool = field(default=False)
+    SnapToPoints: bool = field(default=False)
+    TraceResistance: bool = field(default=True)
+    TraceReactance: bool = field(default=True)
 
-    }
+@dataclass()
+class ChartState(DataManagementAbstract, ABC):
+    # Chart Settings
+    Size: QWindow.size = field(default=QWindow.size)
+    Position: QWindow.position = field(default=QWindow.position)
+    ShowImpedanceGrid: bool = field(default=True)
+    ShowReactanceGrid: bool = field(default=True)
+    ## For Chart Display Grid Settings
+    RegionsCount: int = field(default=1)
+    Regions: list[ChartRegionsTemplate] = field(default_factory=list)
+    ## For RF Objects
+    RfObjectsCount: int = field(default=1)
+    RfObjects: list[RfObjectTemplate] = field(default_factory=list)
+    def _update_regions(self, regions_count):
+        if regions_count > len(self.Regions):
+            for i in range(len(self.Regions), regions_count):
+                self.Regions.append(ChartRegionsTemplate())
+        elif regions_count < len(self.Regions):
+            self.Regions = self.Regions[:regions_count]
+    def _update_rf_objects(self, rf_objects_count):
+        if rf_objects_count > len(self.RfObjects):
+            for i in range(len(self.RfObjects), rf_objects_count):
+                self.RfObjects.append(RfObjectTemplate())
 
-    def update_chart_objects(self, operation, number):
-        if operation == "add":
-            self.chart_objects_list["number_of_objects"] += 1
-            self.chart_objects_list["objects"].append(
-                self._chart_object_template)
-        elif operation == "remove":
-            self.chart_objects_list["number_of_objects"] -= 1
-            self.chart_objects_list["objects"].pop(number)
-        else:
-            raise ValueError("Invalid operation")
+    def parse_session(self, session):
+        self.Size = session["Size"]
+        self.Position = session["Position"]
+        self.ShowImpedanceGrid = session["ShowImpedanceGrid"]
+        self.ShowReactanceGrid = session["ShowReactanceGrid"]
+        self.RegionsCount = session["RegionsCount"]
+        self.Regions = session["Regions"]
+        self.RfObjectsCount = session["RfObjectsCount"]
+        self.RfObjects = session["RfObjects"]
 
-    def get_state(self, get_type):
-        if get_type == "window_settings":
-            return self.window_settings
-        elif get_type == "chart_settings":
-            return self.chart_settings
-        elif get_type == "chart_objects_list":
-            return self.chart_objects_list
-        else:
-            raise ValueError("Invalid get_type")
+    def __post_init__(self):
+        self._update_regions(self.RegionsCount)
+        self._update_rf_objects(self.RfObjectsCount)
+@dataclass
+class WindowState(DataManagementAbstract,ABC):
+    # Window Settings
+    WindowTitle: str = field(default="YABASCO")
+    WindowSize: QWindow.size = field(default=QWindow.size)
+    WindowPosition: QWindow.position = field(default=QWindow.position)
+    WindowIconLocation: str = field(
+        default="C:/repos/learning_python/yabasco_icon.ico")
+    def parse_session(self, session):
+        self.WindowTitle = session["WindowTitle"]
+        self.WindowSize = session["WindowSize"]
+        self.WindowPosition = session["WindowPosition"]
+        self.WindowIconLocation = session["WindowIconLocation"]
 
-    def set_state(self, set_type, state):
-        if set_type == "window_settings":
-            self.window_settings = state
-        elif set_type == "chart_settings":
-            self.chart_settings = state
-        elif set_type == "chart_objects_list":
-            self.chart_objects_list = state
-        else:
-            raise ValueError("Invalid set_type")
+
 
 class DataManagement:
-    def __init__(self, config_file):
-        self.config = load_config(config_file)
+    def __init__(self, session_file="session.yaml"):
+        self.session = session_file
+        self.window = WindowState()
+        self.chart = ChartState()
 
-    def generate_save_file_structure(self):
-        pass
-        #return save_file_struct
+    def _serialize(self, data):
+        """
+        Recursively convert dicts/lists of Qt objects or enums
+        into basic Python types (str/int) so PyYAML can dump them.
+        """
+        if isinstance(data, dict):
+            return {k: self._serialize(v) for k, v in data.items()}
+        if isinstance(data, list):
+            return [self._serialize(v) for v in data]
+        # basic YAML types pass through
+        if isinstance(data, (str, int, float, bool, type(None))):
+            return data
+        # QColor → its hex name
+        if isinstance(data, QColor):
+            return data.name()
+        # fallback: convert anything else to str()
+        return str(data)
+
+    def save_yaml(self, session_file):
+        with open(session_file, 'w') as outfile:
+            chart_dict = asdict(self.chart)
+            window_dict = asdict(self.window)
+            # convert non-YAML-native objects into primitives
+            chart_safe = self._serialize(chart_dict)
+            window_safe = self._serialize(window_dict)
+
+            yaml.dump(
+                {"chart": chart_safe, "window": window_safe},
+                outfile,
+                Dumper=yaml.SafeDumper,
+                default_flow_style=False
+            )
+
+    def load_yaml(self, session_file):
+        with open(session_file, 'r') as stream:
+            try:
+                session = yaml.load(stream, Loader=yaml.FullLoader)
+                print(
+                    f"Loaded session from {session_file}:\n"
+                    f"  Chart: {session['chart']}\n"
+                    f"  Window: {session['window']}"
+                )
+                self.chart.parse_session(session.get("chart", {}))
+                self.window.parse_session(session.get("window", {}))
+            except yaml.YAMLError as yaml_exception:
+                print(yaml_exception)

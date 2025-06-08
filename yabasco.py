@@ -28,6 +28,10 @@ from src.main_window import MainWindow
 from src.data_management import DataManagement
 
 def main(save_file: str = "save.yaml"):
+    #instantiate the data_manager
+    data_manager=DataManagement()
+
+    #instantiate the qt app
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
 
@@ -59,7 +63,7 @@ def main(save_file: str = "save.yaml"):
                 print("yabasco.py -s <save-file>")
                 sys.exit(2)
             elif currentArgument in ("-s", "--save-file"):
-                save_file = currentValue
+                data_manager.save_yaml(session_file=currentValue)
                 print(f"Save file is {save_file}")
 
     except getopt.error as err:
@@ -68,11 +72,10 @@ def main(save_file: str = "save.yaml"):
 
     # Initialize Data Management Object
     try:
-        session = DataManagement(save_file)
-    except FileNotFoundError:
-        print(f"Save file {save_file} not found. Creating new save file.")
-        file = open(save_file, "w")
-        file.close()
+        data_manager.save_yaml(session_file=save_file)
+    except:
+        print("Error saving session file.")
+        sys.exit(2)
 
     window = MainWindow()
     window.show()
