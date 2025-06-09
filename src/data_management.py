@@ -20,15 +20,15 @@
 ## Purpose: Core data structures, isolated from the GUI.
 ###############################################################################
 
-import yaml, yaml_everywhere
+import yaml
 from dataclasses import dataclass, field, asdict
 from abc import ABC, abstractmethod
 
 from PyQt5.QtGui import QColor, QFont, QIcon, QWindow
 
-# Get Constructors and Representers from yaml_everywhere.py
-import yaml_everywhere
-yaml_everywhere.update_yams()
+## Get Constructors and Representers from yaml_everywhere.py
+#from .yaml_everywhere import register_yaml_qt_types
+#register_yaml_qt_types()
 
 @dataclass
 class DataManagementAbstract(ABC):
@@ -80,6 +80,7 @@ class RfObjectTemplate(DataManagementAbstract):
     ReflectionPhase: float = field(default=0.0)
     ReflectionMagnitude: float = field(default=0.0)
     StandingWaveRatio: float = field(default=0.0)
+    ShowSwrCircle: bool = field(default=True)
     WavelengthsTowardsGenerator: float = field(default=0.0)
     IntersectionWithUnityA: complex = field(default=complex(1,0))
     IntersectionWithUnityB: complex = field(default=complex(1,0))
@@ -126,6 +127,8 @@ class ChartState(DataManagementAbstract, ABC):
     def __post_init__(self):
         self._update_regions(self.RegionsCount)
         self._update_rf_objects(self.RfObjectsCount)
+
+
 @dataclass
 class WindowState(DataManagementAbstract,ABC):
     # Window Settings
@@ -176,6 +179,7 @@ class DataManagement:
 
             yaml.dump(
                 {"chart": chart_safe, "window": window_safe},
+                #{"chart": chart_dict, "window": window_dict},
                 outfile,
                 Dumper=yaml.SafeDumper,
                 default_flow_style=False

@@ -1,0 +1,110 @@
+chart:
+  BackgroundColor: '#ffffff'
+  ForegroundColor: '#ffffff'
+  LabelFont: <class 'PyQt5.QtGui.QFont.Style'>
+  LabelFontColor: '#ffffff'
+  LabelFontSize: 8
+  LabelFontStyle: <class 'PyQt5.QtGui.QFont.Style'>
+  LabelFontWeight: <class 'PyQt5.QtGui.QFont.Weight'>
+  ObjectColor: '#ffffff'
+  ObjectCount: 0
+  ObjectLineDash: ''
+  ObjectLineStyle: solid
+  ObjectLineWidth: 1
+  Position: <built-in function position>
+  Regions:
+  - BackgroundColor: '#ffffff'
+    EndingReactance: 90
+    EndingResistance: 1
+    ForegroundColor: '#ffffff'
+    LabelFont: <class 'PyQt5.QtGui.QFont.Style'>
+    LabelFontColor: '#ffffff'
+    LabelFontSize: 8
+    LabelFontStyle: <class 'PyQt5.QtGui.QFont.Style'>
+    LabelFontWeight: <class 'PyQt5.QtGui.QFont.Weight'>
+    ObjectColor: '#ffffff'
+    ObjectCount: 0
+    ObjectLineDash: ''
+    ObjectLineStyle: solid
+    ObjectLineWidth: 1
+    ReactanceLineDensity: 5
+    ResistanceLineDensity: 5
+    StartingReactance: -90
+    StartingResistance: 1000
+    TitleFont: <class 'PyQt5.QtGui.QFont.Style'>
+    TitleFontColor: '#ffffff'
+    TitleFontSize: 8
+    TitleFontStyle: <class 'PyQt5.QtGui.QFont.Style'>
+    TitleFontWeight: <class 'PyQt5.QtGui.QFont.Weight'>
+    Visible: true
+  RegionsCount: 1
+  RfObjects:
+  - Admittance: 0j
+    BackgroundColor: '#ffffff'
+    Draggable: false
+    ForegroundColor: '#ffffff'
+    Impedance: 0j
+    IntersectionWithUnityA: (1+0j)
+    IntersectionWithUnityB: (1+0j)
+    LabelFont: <class 'PyQt5.QtGui.QFont.Style'>
+    LabelFontColor: '#ffffff'
+    LabelFontSize: 8
+    LabelFontStyle: <class 'PyQt5.QtGui.QFont.Style'>
+    LabelFontWeight: <class 'PyQt5.QtGui.QFont.Weight'>
+    Mode: impedance
+    Number: 1
+    ObjectColor: '#ffffff'
+    ObjectCount: 0
+    ObjectLineDash: ''
+    ObjectLineStyle: solid
+    ObjectLineWidth: 1
+    ReflectionCoefficient: 0j
+    ReflectionMagnitude: 0.0
+    ReflectionPhase: 0.0
+    ShowSwrCircle: true
+    SnapToLines: false
+    SnapToPoints: false
+    StandingWaveRatio: 0.0
+    TitleFont: <class 'PyQt5.QtGui.QFont.Style'>
+    TitleFontColor: '#ffffff'
+    TitleFontSize: 8
+    TitleFontStyle: <class 'PyQt5.QtGui.QFont.Style'>
+    TitleFontWeight: <class 'PyQt5.QtGui.QFont.Weight'>
+    TraceReactance: true
+    TraceResistance: true
+    Type: impedance
+    Visible: true
+    WavelengthsTowardsGenerator: 0.0
+  RfObjectsCount: 1
+  ShowImpedanceGrid: true
+  ShowReactanceGrid: true
+  Size: <built-in function size>
+  TitleFont: <class 'PyQt5.QtGui.QFont.Style'>
+  TitleFontColor: '#ffffff'
+  TitleFontSize: 8
+  TitleFontStyle: <class 'PyQt5.QtGui.QFont.Style'>
+  TitleFontWeight: <class 'PyQt5.QtGui.QFont.Weight'>
+  Visible: true
+window:
+  BackgroundColor: '#ffffff'
+  ForegroundColor: '#ffffff'
+  LabelFont: <class 'PyQt5.QtGui.QFont.Style'>
+  LabelFontColor: '#ffffff'
+  LabelFontSize: 8
+  LabelFontStyle: <class 'PyQt5.QtGui.QFont.Style'>
+  LabelFontWeight: <class 'PyQt5.QtGui.QFont.Weight'>
+  ObjectColor: '#ffffff'
+  ObjectCount: 0
+  ObjectLineDash: ''
+  ObjectLineStyle: solid
+  ObjectLineWidth: 1
+  TitleFont: <class 'PyQt5.QtGui.QFont.Style'>
+  TitleFontColor: '#ffffff'
+  TitleFontSize: 8
+  TitleFontStyle: <class 'PyQt5.QtGui.QFont.Style'>
+  TitleFontWeight: <class 'PyQt5.QtGui.QFont.Weight'>
+  Visible: true
+  WindowIconLocation: C:/repos/learning_python/yabasco_icon.ico
+  WindowPosition: <built-in function position>
+  WindowSize: PyQt5.QtCore.QSize(800, 600)
+  WindowTitle: YABASCO

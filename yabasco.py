@@ -1,4 +1,4 @@
-###########################################################################################
+###############################################################################
 ## yabasco: Yet Another BAsic Smith Chart gizmO
 ## Copyright (C) 2025  Kyle Thomas Goodman
 ## email: kylegoodman@kgindustrial.com
@@ -16,7 +16,7 @@
 ##
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
-###########################################################################################
+###############################################################################
 import sys, getopt
 
 from PyQt5.QtCore import Qt
@@ -27,7 +27,7 @@ from src.main_window import MainWindow
 
 from src.data_management import DataManagement
 
-def main(save_file: str = "save.yaml"):
+def main():
     #instantiate the data_manager
     data_manager=DataManagement()
 
@@ -64,20 +64,13 @@ def main(save_file: str = "save.yaml"):
                 sys.exit(2)
             elif currentArgument in ("-s", "--save-file"):
                 data_manager.save_yaml(session_file=currentValue)
-                print(f"Save file is {save_file}")
-
+                print(f"Save file is {currentValue}")
     except getopt.error as err:
         print(str(err))
         sys.exit(2)
 
-    # Initialize Data Management Object
-    try:
-        data_manager.save_yaml(session_file=save_file)
-    except:
-        print("Error saving session file.")
-        sys.exit(2)
 
-    window = MainWindow()
+    window = MainWindow(data_manager=data_manager)
     window.show()
     sys.exit(app.exec_())
 
